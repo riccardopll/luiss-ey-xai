@@ -6,8 +6,7 @@ data/raw/
 data/processed/
 data/indexes/
 tmp/
-luiss_ey_project.pdf
-project_rulez.pdf
+docs/
 
 # Python
 __pycache__/

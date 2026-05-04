@@ -31,14 +31,14 @@ The plan must keep a clean distinction between fields used to rank similarity (s
 
 **Signals** influence retrieval and ranking:
 
-| Signal                                  | Use                                                                                                      |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `Operation_Name_English`                | Short semantic signal from the project title.                                                            |
-| `Operation_Summary_English`             | Main semantic signal from the project description.                                                       |
-| `Country` / `CountryCode`               | Optional ranking adjustment when the project country matches the geocoded location.                      |
-| `Location_Indicator_latitude_longitude` | Optional ranking adjustment for projects geographically close to the user location.                      |
-| `NUTS3_Label`                           | Optional ranking adjustment for projects in the same NUTS3 area as the geocoded location.                |
-| `LAU_Labels`                            | Optional ranking adjustment for projects in the same local administrative area as the geocoded location. |
+| Signal                                                               | Use                                                                                                               |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `Operation_Name_English` / `Operation_Name_Programme_Language`       | Short semantic signal from the project title, using both English and programme-language text when available.      |
+| `Operation_Summary_English` / `Operation_Summary_Programme_Language` | Main semantic signal from the project description, using both English and programme-language text when available. |
+| `Country` / `CountryCode`                                            | Optional ranking adjustment when the project country matches the geocoded location.                               |
+| `Location_Indicator_latitude_longitude`                              | Optional ranking adjustment for projects geographically close to the user location.                               |
+| `NUTS3_Label`                                                        | Optional ranking adjustment for projects in the same NUTS3 area as the geocoded location.                         |
+| `LAU_Labels`                                                         | Optional ranking adjustment for projects in the same local administrative area as the geocoded location.          |
 
 **Outputs** help the user position the project:
 

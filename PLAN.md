@@ -2,32 +2,32 @@
 
 ## 1. Project Goal
 
-Build a working proof of concept that helps municipalities, consultants, or public-sector advisors understand how a new local project idea compares with past EU-funded projects. The system uses historical EU-funded projects as reference examples to suggest how the new idea could be positioned.
+Build a working proof of concept that helps municipalities, consultants, or public-sector advisors compare a new local project idea with past EU-funded projects. The system uses historical projects as reference examples to suggest how the new idea could be positioned.
 
 The POC should answer one core question:
 
 > Given a municipal project idea, which past EU-funded projects are most similar, and what programme, fund, category, objective, and budget information can be suggested from those matches?
 
-The solution should combine retrieval over historical EU-funded project records with simple, understandable explanations of why specific records were matched. It should also preserve traceability for the user's input, model configuration, generated outputs, and explanations through an immutable blockchain-like audit layer.
+Use retrieval to find similar EU-funded projects, then use a local LLM to explain each match. Retrieval controls the ranking; the LLM only explains it. The approach is detailed in [RAG.md](RAG.md). Each run is recorded in an append-only, hash-linked audit log that covers the user's input, model configuration, generated outputs, retrieved evidence, and explanations.
 
 ## 2. Context
 
-The EY brief frames the project around XAI, blockchain traceability, and EU funding support. XAI is needed to make AI outputs understandable to users and evaluators, blockchain traceability is used to certify the process and preserve an auditable record, and the EU funding support component aims to reduce information fragmentation while helping users identify relevant funding opportunities.
+The EY brief focuses on XAI, blockchain traceability, and EU funding support. XAI makes AI outputs understandable to users and evaluators. Traceability preserves evidence of the process in an auditable record. The funding support layer helps reduce information fragmentation and identify relevant funding opportunities.
 
 The final submission must include a working prototype with clean, reproducible source code, a technical report, and a short business-oriented presentation.
 
 The POC should support this flow:
 
-1. The user provides a project idea as raw text or as a PDF, such as a municipal project description, concept note, or planning document.
-2. The user can optionally provide a location string, which the system geocodes into place metadata.
+1. The user provides a project idea as raw text or PDF, such as a municipal project description, concept note, or planning document.
+2. The user can add an optional location string, which the system geocodes into place metadata.
 3. The system extracts and cleans the project description into plain text that can be used by the retrieval model.
 4. The model retrieves the most similar historical project records.
-5. The system returns ranked matches, recommended positioning information, and a short explanation of why the matches were selected.
+5. The system returns ranked matches, recommended positioning information, and a short grounded explanation of why the matches were selected.
 6. The system stores an audit record for the run.
 
 ## 3. Signals vs Outputs
 
-The plan must keep a clean distinction between fields used to rank similarity (signals) and fields returned to help the user (outputs).
+Keep a clear distinction between fields used to rank similarity (signals) and fields returned to help the user (outputs).
 
 **Signals** influence retrieval and ranking:
 
@@ -58,13 +58,15 @@ The plan must keep a clean distinction between fields used to rank similarity (s
 
 ## 5. Explainability and Traceability
 
-The explanation should be understandable to non-technical users. Each result should explain what part of the user's project idea was similar to the retrieved project, which project fields contributed to the match, whether geography influenced the ranking, which output fields were inferred from similar projects, and what confidence score was assigned.
+Each result should explain the match in non-technical language: what was similar, which fields contributed, whether geography affected the score, which fields were copied from similar projects, and what confidence score was assigned.
+
+The explanation layer should use the RAG pipeline described in [RAG.md](RAG.md).
 
 Example explanation structure:
 
-> This project was retrieved because its summary discusses energy efficiency in public infrastructure, which is close to the uploaded project idea. The ranking was also adjusted because the project is in the same country. The suggested fund, category, and objective are inferred from the top similar historical projects.
+> This project is similar because the matched record's summary and the user's project description both discuss energy efficiency in public infrastructure. The score was supported by semantic similarity and overlapping terms in the summaries. Geography also increased the score because the project is in the same country. The suggested fund, category, objective, and budget are copied from similar historical projects and should be treated as benchmarks.
 
-The blockchain component should be a local proof of concept focused on auditability. Each inference run should create one immutable block that records the main elements needed to verify what was submitted, which model configuration was used, which results were returned, and how the block connects to the previous run.
+For the POC, the blockchain layer can be a local append-only audit log. Each run creates one immutable block that records what was submitted, which model configuration was used, which results were returned, and how the block connects to the previous run.
 
 | Field                    | Purpose                                                              |
 | ------------------------ | -------------------------------------------------------------------- |
@@ -76,6 +78,9 @@ The blockchain component should be a local proof of concept focused on auditabil
 | `model_version`          | Records which model was used.                                        |
 | `dataset_version`        | Records which processed dataset was used.                            |
 | `top_k_result_ids`       | Records the project IDs returned by the retrieval model.             |
+| `llm_input_hash`         | Verifies the snippets and scores given to the local LLM.             |
+| `prompt_template_version` | Records which explanation prompt contract was used.                  |
+| `llm_model_version`      | Records which local LLM generated the explanation.                   |
 | `explanation_hash`       | Verifies the generated explanation.                                  |
 | `previous_block_hash`    | Links the block to the previous audit record.                        |
 | `current_block_hash`     | Verifies the integrity of the current block.                         |

@@ -37,7 +37,7 @@ The local LLM receives one matched project at a time:
   "scores": {
     "semantic_score": 0.82,
     "keyword_score": 0.67,
-    "geographic_score": 0.40,
+    "geographic_score": 0.4,
     "confidence_score": 0.74
   }
 }

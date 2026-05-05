@@ -1,0 +1,3 @@
+[tool.taskipy.tasks]
+format = "npx --yes --package prettier prettier --write '**/*.md' && .venv/bin/python -m nbqa black . --nbqa-files '.*\\.ipynb'"
+typecheck = ".venv/bin/python -m nbqa mypy . --nbqa-files '.*\\.ipynb'"

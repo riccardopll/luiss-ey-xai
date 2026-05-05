@@ -68,19 +68,19 @@ Example explanation structure:
 
 For the POC, the blockchain layer can be a local append-only audit log. Each run creates one immutable block that records what was submitted, which model configuration was used, which results were returned, and how the block connects to the previous run.
 
-| Field                    | Purpose                                                              |
-| ------------------------ | -------------------------------------------------------------------- |
-| `run_id`                 | Unique identifier for the inference run.                             |
-| `timestamp`              | Records when the run was created.                                    |
-| `input_text_hash`        | Verifies the cleaned text used by the model.                         |
-| `uploaded_file_hash`     | Verifies the uploaded PDF when the input is a file.                  |
-| `location_metadata_hash` | Verifies the geocoded location metadata when a location is provided. |
-| `model_version`          | Records which model was used.                                        |
-| `dataset_version`        | Records which processed dataset was used.                            |
-| `top_k_result_ids`       | Records the project IDs returned by the retrieval model.             |
-| `llm_input_hash`         | Verifies the snippets and scores given to the local LLM.             |
+| Field                     | Purpose                                                              |
+| ------------------------- | -------------------------------------------------------------------- |
+| `run_id`                  | Unique identifier for the inference run.                             |
+| `timestamp`               | Records when the run was created.                                    |
+| `input_text_hash`         | Verifies the cleaned text used by the model.                         |
+| `uploaded_file_hash`      | Verifies the uploaded PDF when the input is a file.                  |
+| `location_metadata_hash`  | Verifies the geocoded location metadata when a location is provided. |
+| `model_version`           | Records which model was used.                                        |
+| `dataset_version`         | Records which processed dataset was used.                            |
+| `top_k_result_ids`        | Records the project IDs returned by the retrieval model.             |
+| `llm_input_hash`          | Verifies the snippets and scores given to the local LLM.             |
 | `prompt_template_version` | Records which explanation prompt contract was used.                  |
-| `llm_model_version`      | Records which local LLM generated the explanation.                   |
-| `explanation_hash`       | Verifies the generated explanation.                                  |
-| `previous_block_hash`    | Links the block to the previous audit record.                        |
-| `current_block_hash`     | Verifies the integrity of the current block.                         |
+| `llm_model_version`       | Records which local LLM generated the explanation.                   |
+| `explanation_hash`        | Verifies the generated explanation.                                  |
+| `previous_block_hash`     | Links the block to the previous audit record.                        |
+| `current_block_hash`      | Verifies the integrity of the current block.                         |

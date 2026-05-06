@@ -1,3 +1,9 @@
 [tool.taskipy.tasks]
-format = "npx --yes --package prettier prettier --write '**/*.md' && .venv/bin/python -m nbqa black . --nbqa-files '.*\\.ipynb'"
-typecheck = ".venv/bin/python -m nbqa mypy . --nbqa-files '.*\\.ipynb'"
+format = "npx --yes --package prettier prettier --write '**/*.md' && .venv/bin/ruff format . && .venv/bin/ruff check . --fix"
+typecheck = ".venv/bin/nbqa \"ty check\" . --nbqa-files '.*\\.ipynb'"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

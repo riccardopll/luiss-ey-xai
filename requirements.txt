@@ -1,4 +1,15 @@
-black
-mypy
+bm25s
+ipykernel
+ipython
 nbqa
+numpy
+pandas
+pandas-stubs
+pyarrow
+python-dotenv
+ruff
+scikit-learn
+sentence-transformers
+stopwordsiso
 taskipy
+ty

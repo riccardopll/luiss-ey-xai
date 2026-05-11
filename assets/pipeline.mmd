@@ -1,18 +1,18 @@
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "primaryColor": "#eef4f8", "primaryTextColor": "#1d252d", "primaryBorderColor": "#2f3a46", "lineColor": "#2f3a46", "secondaryColor": "#f7f2e8", "tertiaryColor": "#ffffff"}}}%%
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "primaryColor": "#eef4f8", "primaryTextColor": "#1d252d", "primaryBorderColor": "#2f3a46", "lineColor": "#2f3a46", "secondaryColor": "#eef4f8", "tertiaryColor": "#eef4f8"}}}%%
 flowchart LR
-    input["Input project<br/>Text or PDF<br/>Optional location"]
-    preprocess["Preprocess<br/>Clean text<br/>Build corpus"]
-    retrieval["Hybrid retrieval<br/>Dense + BM25<br/>Geography when present"]
-    rag["RAG layer<br/>Explain matches<br/>Summarize suggestions"]
-    audit["Audit log<br/>Hash inputs<br/>Link blocks"]
-    cache["Cached artifacts<br/>Processed parquet, BM25 index, dense embeddings, benchmarks"]
+    input["Input project text<br/>+<br/>Optional location"]
+    preprocess["PREPROCESS<br/>Clean text<br/>Build corpus"]
+    retrieval["HYBRID RETRIEVAL<br/>Dense + BM25 +<br/>Geography when present"]
+    rag["RAG LAYER<br/>Explain matches<br/>Summarize suggestions"]
+    audit["AUDIT LOG<br/>Hash i/o<br/>Link blocks"]
+    cache["CACHED ARTIFACTS<br/>Processed parquet, BM25 index, dense embeddings, benchmarks"]
 
     input --> preprocess --> retrieval --> rag --> audit
     preprocess -.-> cache
 
     classDef main fill:#eef4f8,stroke:#2f3a46,stroke-width:2px,color:#1d252d;
-    classDef warm fill:#f7f2e8,stroke:#2f3a46,stroke-width:2px,color:#1d252d;
-    classDef cache fill:#ffffff,stroke:#9ba7b4,stroke-width:2px,color:#1d252d;
+    classDef warm fill:#eef4f8,stroke:#2f3a46,stroke-width:2px,color:#1d252d;
+    classDef cache fill:#eef4f8,stroke:#9ba7b4,stroke-width:2px,color:#1d252d;
 
     class input,retrieval,audit main;
     class preprocess,rag warm;

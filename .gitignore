@@ -5,6 +5,10 @@
 data/
 tmp/
 docs/
+assets/*.png
+technical_report.pdf
+luiss_ey_project.md
+project_rulez.md
 
 # Environment
 .env

@@ -64,7 +64,25 @@ while the BM25 text has an average length of 1,635.17 characters.
 This gives the sparse model a cleaner term representation,
 while the original text remains available for display and explanations.
 
-![Retrieval, explanation, and audit pipeline.](assets/pipeline.png)
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "primaryColor": "#eef4f8", "primaryTextColor": "#1d252d", "primaryBorderColor": "#2f3a46", "lineColor": "#2f3a46", "secondaryColor": "#eef4f8", "tertiaryColor": "#eef4f8"}}}%%
+flowchart LR
+    input["Input project text<br/>+<br/>Optional location"]
+    preprocess["PREPROCESS<br/>Clean text<br/>Build corpus"]
+    retrieval["HYBRID RETRIEVAL<br/>Dense + BM25 +<br/>Geography when present"]
+    rag["RAG LAYER<br/>Explain matches<br/>Summarize suggestions"]
+    audit["AUDIT LOG<br/>Hash i/o<br/>Link blocks"]
+    cache["CACHED ARTIFACTS<br/>Processed parquet, BM25 index, dense embeddings, benchmarks"]
+
+    input --> preprocess --> retrieval --> rag --> audit
+    preprocess -.-> cache
+
+    classDef main fill:#eef4f8,stroke:#2f3a46,stroke-width:2px,color:#1d252d;
+    classDef cache fill:#eef4f8,stroke:#9ba7b4,stroke-width:2px,color:#1d252d;
+
+    class input,preprocess,retrieval,rag,audit main;
+    class cache cache;
+```
 
 _Figure 1: Retrieval, explanation, and audit pipeline._
 

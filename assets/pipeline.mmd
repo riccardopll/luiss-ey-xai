@@ -11,9 +11,7 @@ flowchart LR
     preprocess -.-> cache
 
     classDef main fill:#eef4f8,stroke:#2f3a46,stroke-width:2px,color:#1d252d;
-    classDef warm fill:#eef4f8,stroke:#2f3a46,stroke-width:2px,color:#1d252d;
     classDef cache fill:#eef4f8,stroke:#9ba7b4,stroke-width:2px,color:#1d252d;
 
-    class input,retrieval,audit main;
-    class preprocess,rag warm;
+    class input,preprocess,retrieval,rag,audit main;
     class cache cache;

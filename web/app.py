@@ -66,10 +66,10 @@ LOCATION_PIN_DATA_URL = (
 )
 
 DEFAULT_QUERY = (
-    "Renovate public school buildings in Italy with better insulation, smart energy "
+    "Renovate public school buildings in France with better insulation, smart energy "
     "monitoring, and renewable heating systems."
 )
-DEFAULT_LOCATION = "Italy"
+DEFAULT_LOCATION = "France"
 DEFAULT_TOP_K = 10
 RESULT_COLUMNS = [
     "rank",
@@ -640,6 +640,26 @@ def explain_match(query, location_text, row):
         f"The programme context is {programme or 'not available'}, and the score combines "
         "semantic similarity, keyword evidence, and geography when location is available."
     )
+
+
+def score_breakdown(row):
+    components = [
+        ("Semantic", row.get("semantic_score"), 0.50),
+        ("Keyword", row.get("keyword_score"), 0.35),
+        ("Geography", row.get("geographic_score"), 0.15),
+    ]
+    breakdown = []
+    for label, value, weight in components:
+        numeric_value = json_ready_value(value)
+        score = float(numeric_value) if isinstance(numeric_value, int | float) else 0.0
+        breakdown.append(
+            {
+                "label": label,
+                "points": score * weight * 1000,
+                "width": min(max(score, 0), 1) * 100,
+            }
+        )
+    return breakdown
 
 
 def build_llm_input(input_text, location_text, result_row):
@@ -1214,6 +1234,88 @@ def inject_styles():
             white-space: pre-wrap;
         }
 
+        .score-breakdown {
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0;
+            padding: 0.85rem;
+        }
+
+        .score-breakdown-title,
+        .matched-terms-title {
+            color: var(--ink);
+            font-size: 0.84rem;
+            font-weight: 850;
+            line-height: 1.2;
+        }
+
+        .score-components {
+            display: grid;
+            gap: 0.7rem;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .score-component {
+            min-width: 0;
+        }
+
+        .score-component-head {
+            display: block;
+        }
+
+        .score-component-label {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .score-component-points {
+            color: var(--teal);
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 900;
+            margin-top: 0.15rem;
+            white-space: nowrap;
+        }
+
+        .score-track {
+            background: #edf3f6;
+            border-radius: 999px;
+            height: 0.42rem;
+            margin-top: 0.45rem;
+            overflow: hidden;
+        }
+
+        .score-track-fill {
+            background: var(--teal);
+            border-radius: inherit;
+            height: 100%;
+        }
+
+        .matched-terms {
+            margin: 0.75rem 0;
+        }
+
+        .matched-term-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.45rem;
+        }
+
+        .matched-term {
+            background: var(--teal-soft);
+            border: 1px solid #bfdee1;
+            border-radius: 999px;
+            color: var(--teal);
+            font-size: 0.78rem;
+            font-weight: 850;
+            line-height: 1;
+            padding: 0.38rem 0.6rem;
+        }
+
         .summary-strip {
             align-items: center;
             border-bottom: 1px solid var(--line);
@@ -1740,6 +1842,25 @@ def render_explain_panel(state, selected_row):
     prompt_text = build_explanation_prompt(
         build_llm_input(state["query"], state["location"], selected_row)
     )
+    breakdown_items = score_breakdown(selected_row)
+    breakdown_html = "".join(
+        (
+            '<div class="score-component">'
+            '<div class="score-component-head">'
+            f'<span class="score-component-label">{safe(item["label"])}</span>'
+            f'<span class="score-component-points">{item["points"]:.0f} pt.</span>'
+            "</div>"
+            '<div class="score-track">'
+            f'<div class="score-track-fill" style="width: {item["width"]:.0f}%;"></div>'
+            "</div>"
+            "</div>"
+        )
+        for item in breakdown_items
+    )
+    matched_terms = overlap_terms(state["query"], selected_row.get("search_text", ""), limit=6)
+    matched_terms_html = "".join(
+        f'<span class="matched-term">{safe(term)}</span>' for term in matched_terms
+    )
     source_url = clean_text(selected_row.get("Operation_Unique_Identifier"))
     run_record = state["run_record"]
 
@@ -1768,6 +1889,14 @@ def render_explain_panel(state, selected_row):
                 <div class="icon">{icon_svg("brain")}</div>
                 <div class="trace-key">LLM {safe(run_record["llm_model_version"])}</div>
                 <div class="trace-hash">{safe(short_hash(stable_hash(explanation)))}</div>
+            </div>
+            <div class="score-breakdown">
+                <div class="score-breakdown-title">Score breakdown</div>
+                <div class="score-components">{breakdown_html}</div>
+            </div>
+            <div class="matched-terms">
+                <div class="matched-terms-title">Matched terms</div>
+                <div class="matched-term-list">{matched_terms_html}</div>
             </div>
             <div class="why-box">{safe(explanation)}</div>
             <div style="text-align: right; margin: 0.9rem 0 1.2rem;">

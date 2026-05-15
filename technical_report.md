@@ -381,5 +381,6 @@ visualization, and writing through several in person pair programming sessions.
 Generative AI statement: We used OpenAI Codex assistance to
 proofread the documentation and to suggest the use of the BM25S
 library, the Stopwords ISO library, and the Parquet file extension instead of CSV for
-the processed dataset. We take full responsibility for understanding, validating, and
+the processed dataset. The Streamlit application prototype was generated entirely
+using AI. We take full responsibility for understanding, validating, and
 explaining all submitted materials.

@@ -11,5 +11,6 @@ ruff
 scikit-learn
 sentence-transformers
 stopwordsiso
+streamlit
 taskipy
 ty

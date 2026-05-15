@@ -5,6 +5,8 @@
 data/
 tmp/
 docs/
+output/
+.playwright-cli/
 assets/*.png
 technical_report.pdf
 luiss_ey_project.md

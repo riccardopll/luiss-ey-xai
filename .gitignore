@@ -2,7 +2,16 @@
 .DS_Store
 
 # Local data and generated files
-data/
+data/**
+!data/raw/
+!data/raw/**
+!data/processed/
+data/processed/**
+!data/processed/eu_projects_v1.parquet
+!data/indexes/
+data/indexes/**
+!data/indexes/bm25s_v1.pkl
+!data/indexes/multilingual_e5_v1.pkl
 tmp/
 docs/
 output/

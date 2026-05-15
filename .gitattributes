@@ -1,0 +1,4 @@
+data/raw/** filter=lfs diff=lfs merge=lfs -text
+data/processed/eu_projects_v1.parquet filter=lfs diff=lfs merge=lfs -text
+data/indexes/bm25s_v1.pkl filter=lfs diff=lfs merge=lfs -text
+data/indexes/multilingual_e5_v1.pkl filter=lfs diff=lfs merge=lfs -text

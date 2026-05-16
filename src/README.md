@@ -9,20 +9,19 @@ evaluation files used by the prototype. More information is available in the
 
 ## Environment
 
-Create a Python (3.12.9) virtual environment from the project root:
+Create and activate a Python (3.12.9) virtual environment from the project root,
+then install the dependencies:
 
 ```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
+python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
 Create a root `.env` file for local settings:
 
-```bash
-touch .env
-printf 'NOMINATIM_EMAIL=your-email@example.com\n' >> .env
-printf 'HF_TOKEN=your-hugging-face-token\n' >> .env
+```text
+NOMINATIM_EMAIL=your-email@example.com
+HF_TOKEN=your-hugging-face-token
 ```
 
 `NOMINATIM_EMAIL` is optional and is only used for live geocoding. It does not require registration; any valid e-mail address is enough.

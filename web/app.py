@@ -5,6 +5,7 @@ import pickle
 import re
 import uuid
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
@@ -146,6 +147,30 @@ def clean_text(value):
 
 def safe(value):
     return html.escape(clean_text(value))
+
+
+def extract_uploaded_project_text(uploaded_file):
+    extension = Path(uploaded_file.name).suffix.lower()
+    content = uploaded_file.getvalue()
+
+    if extension == ".txt":
+        for encoding in ("utf-8", "utf-8-sig", "latin-1"):
+            try:
+                return clean_text(content.decode(encoding))
+            except UnicodeDecodeError:
+                pass
+        return ""
+
+    if extension == ".pdf":
+        try:
+            from pypdf import PdfReader
+        except ModuleNotFoundError as error:
+            raise RuntimeError("PDF extraction needs the pypdf package.") from error
+
+        reader = PdfReader(BytesIO(content))
+        return clean_text("\n".join(page.extract_text() or "" for page in reader.pages))
+
+    raise ValueError("Only .pdf and .txt files are supported.")
 
 
 def json_ready_value(value):
@@ -451,8 +476,6 @@ def detect_country_code(location_text, projects):
     query = clean_text(location_text).lower()
     if not query or projects.empty:
         return None
-    if re.fullmatch(r"[a-z]{2}", query):
-        return query.upper()
 
     countries = (
         projects[["Country", "CountryCode"]]
@@ -460,12 +483,35 @@ def detect_country_code(location_text, projects):
         .drop_duplicates()
         .sort_values("Country", key=lambda column: column.str.len(), ascending=False)
     )
+    if re.fullmatch(r"[a-z]{2}", query):
+        country_code = query.upper()
+        if country_code in set(countries["CountryCode"].map(clean_text).str.upper()):
+            return country_code
+        return None
+
     for _, row in countries.iterrows():
         country = clean_text(row["Country"]).lower()
         country_code = clean_text(row["CountryCode"]).upper()
         if country and re.search(rf"\b{re.escape(country)}\b", query):
             return country_code
     return None
+
+
+def country_name_for_code(country_code):
+    code = clean_text(country_code).upper()
+    if not code:
+        return ""
+
+    countries = (
+        load_projects()[["Country", "CountryCode"]]
+        .dropna()
+        .drop_duplicates()
+        .sort_values("Country")
+    )
+    matches = countries[countries["CountryCode"].map(clean_text).str.upper() == code]
+    if matches.empty:
+        return ""
+    return clean_text(matches.iloc[0]["Country"])
 
 
 def keyword_scores(query, projects):
@@ -746,7 +792,14 @@ def render_loading_indicator():
     return placeholder
 
 
-def run_search(query, location_text, top_k, show_loading=False):
+def run_search(
+    query,
+    location_text,
+    top_k,
+    show_loading=False,
+    input_source="project_idea",
+    project_idea=None,
+):
     loading_indicator = render_loading_indicator() if show_loading else None
     results, country_code = retrieve_projects(query, location_text, top_k)
     if loading_indicator is not None:
@@ -756,8 +809,10 @@ def run_search(query, location_text, top_k, show_loading=False):
     run_record = build_run_record(query, location_text, country_code, results, suggestions)
     return {
         "query": query,
+        "project_idea": project_idea if project_idea is not None else query,
         "location": location_text,
         "top_k": top_k,
+        "input_source": input_source,
         "country_code": country_code,
         "results": results,
         "suggestions": suggestions,
@@ -902,7 +957,8 @@ def inject_styles():
         }
 
         div[data-testid="stTextArea"] label p,
-        div[data-testid="stTextInput"] label p {
+        div[data-testid="stTextInput"] label p,
+        div[data-testid="stFileUploader"] label p {
             color: var(--ink);
             font-weight: 700;
         }
@@ -928,64 +984,101 @@ def inject_styles():
             min-height: 5.6rem !important;
         }
 
-        .fake-upload-label {
-            color: var(--ink);
-            font-size: 0.875rem;
-            font-weight: 700;
-            line-height: 1.35;
-            margin: 0 0 0.375rem;
-        }
-
-        .fake-upload {
-            align-items: center;
-            background: #fbffff;
-            border: 1.5px dashed #7dbcc0;
+        .location-status {
             border-radius: 8px;
+            font-size: 0.88rem;
+            line-height: 1.35;
+            margin: -0.35rem 0 0.95rem;
+            padding: 0.72rem 0.85rem;
+        }
+
+        .location-status strong {
             color: var(--ink);
-            display: flex;
-            flex-direction: column;
-            gap: 0.55rem;
-            justify-content: center;
-            margin-bottom: 1.05rem;
-            min-height: 5.6rem;
-            padding: 1rem;
-            text-align: center;
-            transition:
-                background 140ms ease,
-                border-color 140ms ease;
         }
 
-        .fake-upload:hover {
-            background: #f2fbfb;
-            border-color: var(--teal);
+        .location-status.success {
+            background: #e8f5f5;
+            border: 1px solid #bfdee1;
+            color: #315f63;
         }
 
-        .fake-upload-icon {
-            align-items: center;
-            color: var(--teal);
-            display: flex;
-            height: 1.35rem;
-            justify-content: center;
-            width: 1.35rem;
+        .location-status.warning {
+            background: #fff8e7;
+            border: 1px solid #f0dca2;
+            color: #6b5a26;
         }
 
-        .fake-upload-icon svg {
-            display: block;
-            height: 1.25rem;
-            width: 1.25rem;
+        .location-status.idle {
+            background: #f3f7fa;
+            border: 1px solid #dfe6ef;
+            color: var(--muted);
         }
 
-        .fake-upload-text {
-            color: var(--ink);
-            font-size: 0.95rem;
-            font-weight: 800;
+        div[data-testid="stFileUploader"] section {
+            align-items: center !important;
+            background: #fbffff !important;
+            border: 1.5px dashed #7dbcc0 !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            color: var(--ink) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.55rem !important;
+            justify-content: center !important;
+            margin-bottom: 0.45rem !important;
+            min-height: 5.6rem !important;
+            outline: 0 !important;
+            padding: 1rem !important;
+            text-align: center !important;
+        }
+
+        div[data-testid="stFileUploader"] section:hover {
+            background: #f2fbfb !important;
+            border-color: var(--teal) !important;
+        }
+
+        div[data-testid="stFileUploader"] section button {
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            color: var(--teal) !important;
+            font-weight: 800 !important;
+        }
+
+        div[data-testid="stFileUploader"] section button:hover {
+            background: transparent !important;
+            border: 0 !important;
+            color: #06676b !important;
+        }
+
+        div[data-testid="stFileUploader"] section p,
+        div[data-testid="stFileUploader"] section small,
+        div[data-testid="stFileUploader"] section span {
+            color: var(--ink) !important;
+        }
+
+        div[data-testid="stFileUploader"] section
+        [data-testid="stFileUploaderDropzoneInstructions"] {
+            color: var(--muted);
+            font-size: 0.9rem;
             line-height: 1.25;
+            text-align: center;
         }
 
-        div[data-testid="stTextArea"] textarea:focus,
-        div[data-testid="stTextInput"] input:focus {
+        div[data-testid="stFileUploader"] section
+        [data-testid="stFileUploaderDropzoneInstructions"] * {
+            display: none !important;
+        }
+
+        div[data-testid="stFileUploader"] section
+        [data-testid="stFileUploaderDropzoneInstructions"]::after {
+            content: "Upload one or more files to add more context. Supported files: PDF, TXT";
+        }
+
+        div[data-testid="stFileUploader"]:focus-within section {
             border-color: var(--teal) !important;
             box-shadow: 0 0 0 1px var(--teal) !important;
+            outline: 0 !important;
         }
 
         div[data-testid="stFormSubmitButton"] button {
@@ -1910,29 +2003,96 @@ def render_explain_panel(state, selected_row):
 
 
 def render_search_controls(state):
-    with st.container(border=True):
+    with st.container():
         with st.form("search_form"):
             query = st.text_area(
                 "Project idea",
-                value=state["query"],
+                value=state.get("project_idea", state["query"])
+                if state.get("input_source") != "project_files"
+                else "",
                 height=120,
                 placeholder="Describe the project idea",
             )
-            st.markdown(
-                f"""
-                <div class="fake-upload-label">Project file</div>
-                <div class="fake-upload" aria-label="Fake file upload area">
-                    <div class="fake-upload-icon">{icon_svg("file")}</div>
-                    <div class="fake-upload-text">Move the file there to upload</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
+            uploaded_files = st.file_uploader(
+                "Project files (optional)",
+                type=["pdf", "txt"],
+                accept_multiple_files=True,
             )
             location = st.text_input("Location", value=state["location"])
+            location_text = clean_text(state.get("location"))
+            country_code = clean_text(state.get("country_code"))
+            if country_code:
+                country_name = country_name_for_code(country_code)
+                matched_location = (
+                    f"{country_name} ({country_code})" if country_name else country_code
+                )
+                st.markdown(
+                    (
+                        '<div class="location-status success">'
+                        f"<strong>Geolocation matched</strong> {safe(matched_location)}."
+                        "</div>"
+                    ),
+                    unsafe_allow_html=True,
+                )
+            elif location_text:
+                st.markdown(
+                    (
+                        '<div class="location-status warning">'
+                        "<strong>Geolocation not matched.</strong>"
+                        "</div>"
+                    ),
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    (
+                        '<div class="location-status idle">'
+                        "Add a country name or EU country code to include geography in the ranking."
+                        "</div>"
+                    ),
+                    unsafe_allow_html=True,
+                )
             submitted = st.form_submit_button("Search", width="stretch", type="primary")
 
     if submitted:
-        st.session_state.search_state = run_search(query, location, DEFAULT_TOP_K)
+        query = clean_text(query)
+        has_project_idea = bool(query)
+        has_project_files = bool(uploaded_files)
+        if not has_project_idea and not has_project_files:
+            st.error("Enter a project idea or upload one or more .pdf or .txt files.")
+            return
+
+        project_idea = query
+        if has_project_files:
+            extracted_texts = []
+            extraction_errors = []
+            for uploaded_file in uploaded_files:
+                try:
+                    extracted_text = extract_uploaded_project_text(uploaded_file)
+                except (RuntimeError, ValueError) as error:
+                    extraction_errors.append(f"{uploaded_file.name}: {error}")
+                    continue
+                if extracted_text:
+                    extracted_texts.append(extracted_text)
+                else:
+                    extraction_errors.append(f"{uploaded_file.name}: no readable text found.")
+
+            if extraction_errors:
+                st.error(" ".join(extraction_errors))
+                return
+            query_parts = [query, *extracted_texts] if has_project_idea else extracted_texts
+            query = "\n\n".join(query_parts)
+            input_source_key = "project_idea_and_files" if has_project_idea else "project_files"
+        else:
+            input_source_key = "project_idea"
+
+        st.session_state.search_state = run_search(
+            query,
+            location,
+            DEFAULT_TOP_K,
+            input_source=input_source_key,
+            project_idea=project_idea,
+        )
         st.session_state.selected_project_rank = None
         st.session_state.show_all_matches = False
         st.rerun()

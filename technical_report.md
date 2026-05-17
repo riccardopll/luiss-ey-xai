@@ -132,6 +132,8 @@ If no usable location is available, the geography component is left out and the
 remaining weights are renormalized. Geography can improve a match only when the user
 provides a location and the retrieved records contain usable location data.
 
+\newpage
+
 ## 2.3 Benchmarking and tuning
 
 The benchmark uses 200 historical project records sampled from the processed corpus.
@@ -143,8 +145,6 @@ credit for returning the same project.
 The tuning step uses the coefficient matrix reported in Table 2. For each dense
 candidate in Table 1 and each semantic, keyword, and geography weight combination,
 the notebook runs all 200 benchmark queries and then compares the average metrics.
-
-\newpage
 
 | Configuration | Semantic | Keyword | Geography |
 | ------------- | -------: | ------: | --------: |
@@ -190,6 +190,8 @@ and retrieved project IDs. It also stores the previous and current block hashes.
 the input, result, or explanation changes later, the hash changes too. That keeps
 each run repeatable and inspectable later.
 
+\newpage
+
 # 3. Results and discussion
 
 ## 3.1 Corpus and label structure
@@ -199,8 +201,6 @@ For the populated labels used in the benchmark, the notebook reports 7 fund valu
 619 category labels, 65 specific objective labels, 10 policy objective labels, and
 173 programmes. Table 4 explains why the retrieval evaluation gives more weight to
 category and objective matches than to fund or policy matches.
-
-\newpage
 
 | Field              | Unique values | Top value share | Interpretation                                      |
 | ------------------ | ------------: | --------------: | --------------------------------------------------- |
@@ -302,6 +302,8 @@ and a user interface. It should also keep project similarity separate from fundi
 eligibility. Similarity can be estimated from historical records.
 Eligibility must be checked against current calls, rules, budgets, and
 administrative constraints before anyone makes a real funding decision.
+
+\newpage
 
 # Bibliography
 

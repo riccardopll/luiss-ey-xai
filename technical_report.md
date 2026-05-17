@@ -99,7 +99,7 @@ while the original text remains available for display and explanations.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{assets/pipeline.png}
+\includegraphics[width=\linewidth]{assets/pipeline.jpeg}
 \caption{Retrieval, explanation, and audit pipeline.}
 \end{figure}
 
